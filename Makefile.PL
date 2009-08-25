@@ -3,6 +3,7 @@ use inc::Module::Install;
 
 name('Catalyst-View-MicroTemplate');
 requires('Catalyst');
-requires('Text::MicroTemplate');
+requires('Moose');
+requires('Text::MicroTemplate::File');
 
 WriteAll;

@@ -1,6 +1,5 @@
 package Catalyst::View::MicroTemplate;
 use Moose;
-use MooseX::AttributeHelpers;
 use Text::MicroTemplate::File;
 
 our $VERSION = '0.00001';
