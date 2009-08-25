@@ -1,7 +1,7 @@
 package Catalyst::View::MicroTemplate;
 use Moose;
 use MooseX::AttributeHelpers;
-use Text::MicroTemplate;
+use Text::MicroTemplate::File;
 
 our $VERSION = '0.00001';
 
@@ -42,28 +42,25 @@ has stash_key => (
     lazy_build => 1
 );
 
-has include_paths => (
-    metaclass => 'Collection::Array',
-    is => 'ro',
-    isa => 'ArrayRef[Path::Class::Dir]',
-    required => 1,
-    provides => {
-        elements => 'all_include_paths',
-    }
-);
-
 has template_args => (
     is => 'ro',
     isa => 'HashRef',
     lazy_build => 1
 );
 
+has template => (
+    is => 'ro',
+    isa => 'Text::MicroTemplate::File',
+    lazy_build => 1,
+);
+
 sub BUILDARGS {
     my ($self, $c, $args) = @_;
 
     $args->{namespace} ||= $c;
-    $args->{include_paths} ||= [];
-    my $paths = $args->{include_paths};
+    $args->{template_args} ||= {};
+    $args->{template_args}->{include_path} ||= [];
+    my $paths = $args->{template_args}->{include_path};
     if (scalar @$paths < 1) {
         push @$paths, $c->path_to('root');
     }
@@ -89,54 +86,18 @@ sub _build_template_args {
     return {};
 }
 
-sub build_template {
-    my ($self, $file) = @_;
+sub _build_template {
+    my ($self) = @_;
 
-    my $mt;
-    {
-        my $ref = ref $file;
-        my %args;
-        if ($ref && $ref eq 'SCALAR') {
-            $args{package_name}  = ref($self) . '::' . Digest::MD5::md5_hex( $$file );
-            $args{template} = $$file;
-        } else {
-            # I don't think this is cross-platform...
-            my @name =
-                grep { defined && length } 
-                map { s/[^\w:]/::/g; $_ }
-                File::Spec->splitpath( $file )
-            ;
-            $args{package_name} = join('::', ref($self), @name );
-            my $loaded = 0;
-            foreach my $path ($self->all_include_paths) {
-                eval {
-                    my $content = $path->file( $file )->slurp;
-                    $args{template} = $content;
-                    $loaded++;
-                };
-                last if $loaded;
-            }
-            if (! $loaded) {
-                die "Could not find template file named $file";
-            }
-        }
-        $mt = Text::MicroTemplate->new(%{$self->template_args}, %args);
-    }
-    my $code = $mt->code;
-    my $builder = eval <<"    ...";
-        sub {
-            my (\$c, \$args) = \@_;
-            $code->();
-        }
-    ...
-    die if $@;
-    return $builder;
+    return Text::MicroTemplate::File->new(
+        $self->template_args
+    );
 }
 
 sub render {
     my ($self, $template, $args) = @_;
-    my $builder = $self->build_template( $template );
-    return $builder->($self->context, $args);
+    my $mt = $self->template;
+    return $mt->render_file($template, $self->context, $args);
 }
 
 sub process {
@@ -185,6 +146,9 @@ This is a Text::MicroTemplate view for Catalyst.
 
 =head1 CAVEATS
 
-Values passed to the stash are available to the template like Catalyst::View::TT, but they must be accessed through C<$args> hash reference.
+Values passed to the stash are available to the template like Catalyst::View::TT, but they must be received by normal means. i.e.
+
+    <? my ($c, $args) = @_ ?>
+    # $args contains contents of stash
 
 =cut
