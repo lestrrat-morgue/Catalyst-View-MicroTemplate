@@ -31,6 +31,12 @@ sub test : Local {
     $c->stash->{message} = ($c->request->param('message') || $c->config->{default_message});
 }
 
+sub test_extends : Local {
+    my ($self, $c) = @_;
+
+    $c->stash->{message} = ($c->request->param('message') || $c->config->{default_message});
+}
+
 sub test_includepath : Local {
     my ($self, $c) = @_;
     $c->stash->{message} = ($c->request->param('message') || $c->config->{default_message});
