@@ -75,8 +75,8 @@ sub end : Private {
     return 1 if $c->response->status =~ /^3\d\d$/;
     return 1 if $c->response->body;
 
-    my $view = 'View::MT::' . ($c->request->param('view') || $c->config->{default_view});
-    $c->forward($view);
+    my $view = 'MT::' . ($c->request->param('view') || $c->config->{default_view});
+    $c->forward($c->view($view));
 }
 
 1;
