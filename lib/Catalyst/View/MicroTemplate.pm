@@ -1,6 +1,7 @@
 package Catalyst::View::MicroTemplate;
 use Moose;
 use Text::MicroTemplate::Extended;
+use namespace::clean -except => qw(meta);
 
 our $VERSION = '0.00001';
 
@@ -132,6 +133,8 @@ sub get_template_file {
     return $template;
 }
 
+__PACKAGE__->meta->make_immutable();
+
 1;
 
 __END__
@@ -171,5 +174,16 @@ This is a Text::MicroTemplate view for Catalyst.
 
 Text::MicroTemplate is based on Mojo::Template, and it's aimed for speed and efficiency. In thismodule we use Text::MicroTemplate::Extended, as it allows a more
 realistic usage for applications.
+
+=head1 AUTHORS
+
+Daisuke Maki C<< <daisuke@endeworks.jp> >> 
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+See http://www.perl.com/perl/misc/Artistic.html
 
 =cut
