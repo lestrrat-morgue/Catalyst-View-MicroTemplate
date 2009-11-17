@@ -115,6 +115,7 @@ sub process {
     $c->log->debug( sprintf("[%s] rendering template %s", blessed $self, $template ) ) if $c->debug;
 
     $c->res->content_type( sprintf("%s; charset=%s", $self->content_type, $self->charset ) );
+    $self->template->template_args( $c->stash );
     $c->res->body( $self->render( $template, $c->stash ) );
 }
 
@@ -152,6 +153,8 @@ Catalyst::View::MicroTemplate - Text::MicroTemplate View For Catalyst
 
     # in your config
     <View::MicroTemplate>
+        content_type text/html # added to header
+        charset UTF-8          # added to header
         inlucde_path __path_to(root)__
         include_path /path/to/include/path
         template_suffix .mt # default
@@ -162,11 +165,14 @@ Catalyst::View::MicroTemplate - Text::MicroTemplate View For Catalyst
 
     # same thing in YAML
     'View::MicroTemplate':
+        content_type: text/html
+        charset: UTF-8
         include_path:
             - __path_to(root)__
             - /path/to/include/path
         template_args:
             foo: bar
+        template_suffix: .mt
         
 =head1 DESCRIPTION
 
