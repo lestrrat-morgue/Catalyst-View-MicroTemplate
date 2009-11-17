@@ -11,9 +11,9 @@ our $VERSION = '0.01';
 __PACKAGE__->config(
     name                  => 'TestApp',
     default_message       => 'hi',
-    default_view          => 'Pkgconfig',
-    'View::TT::AppConfig' => {
-        suffix => '.mt',
+    default_view          => 'Default',
+    'View::MT::AppConfig' => {
+        template_suffix => '.mt',
     },
 );
 
@@ -41,7 +41,7 @@ sub test_includepath : Local {
     }
     if ( $c->request->param('addpath') ){
         my $additionalpath = Path::Class::dir($c->config->{root}, $c->request->param('addpath'));
-        my $view = 'TestApp::View::TT::' . ($c->request->param('view') || $c->config->{default_view});
+        my $view = 'TestApp::View::MT::' . ($c->request->param('view') || $c->config->{default_view});
         no strict "refs";
         push @{$view . '::include_path'}, "$additionalpath";
         use strict;
@@ -51,7 +51,7 @@ sub test_includepath : Local {
 sub test_render : Local {
     my ($self, $c) = @_;
 
-    my $out = $c->stash->{message} = $c->view('TT::AppConfig')->render($c, $c->req->param('template'), {param => $c->req->param('param') || ''});
+    my $out = $c->stash->{message} = $c->view('MT::AppConfig')->render($c, $c->req->param('template'), {param => $c->req->param('param') || ''});
     if (UNIVERSAL::isa($out, 'Template::Exception')) {
         $c->response->body($out);
         $c->response->status(403);
@@ -65,7 +65,7 @@ sub test_msg : Local {
     my ($self, $c) = @_;
     my $tmpl = $c->req->param('msg');
     
-    $c->stash->{message} = $c->view('TT::AppConfig')->render($c, \$tmpl);
+    $c->stash->{message} = $c->view('MT::AppConfig')->render($c, \$tmpl);
     $c->stash->{template} = 'test.tt';
 }
 
@@ -75,7 +75,7 @@ sub end : Private {
     return 1 if $c->response->status =~ /^3\d\d$/;
     return 1 if $c->response->body;
 
-    my $view = 'View::TT::' . ($c->request->param('view') || $c->config->{default_view});
+    my $view = 'View::MT::' . ($c->request->param('view') || $c->config->{default_view});
     $c->forward($view);
 }
 

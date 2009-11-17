@@ -1,4 +1,4 @@
-package TestApp::View::TT::AppConfig;
+package TestApp::View::MT::AppConfig;
 use strict;
 use base 'Catalyst::View::MicroTemplate';
 

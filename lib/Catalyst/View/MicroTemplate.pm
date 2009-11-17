@@ -1,16 +1,10 @@
 package Catalyst::View::MicroTemplate;
 use Moose;
-use Text::MicroTemplate::File;
+use Text::MicroTemplate::Extended;
 
 our $VERSION = '0.00001';
 
 extends 'Catalyst::View';
-
-has namespace => (
-    is => 'ro',
-    isa => 'Str',
-    required => 1,
-);
 
 has context => (
     is => 'rw',
@@ -29,7 +23,12 @@ has charset => (
     default => 'utf8',
 );
 
-has suffix => (
+has include_path => (
+    is => 'ro',
+    isa => 'ArrayRef',
+);
+
+has template_suffix => (
     is => 'ro',
     isa => 'Str',
     lazy_build => 1
@@ -49,22 +48,28 @@ has template_args => (
 
 has template => (
     is => 'ro',
-    isa => 'Text::MicroTemplate::File',
+    isa => 'Text::MicroTemplate::Extended',
     lazy_build => 1,
 );
 
-sub BUILDARGS {
-    my ($self, $c, $args) = @_;
+around BUILDARGS => sub {
+    my ($next, $self, $c, $args) = @_;
 
-    $args->{namespace} ||= $c;
-    $args->{template_args} ||= {};
-    $args->{template_args}->{include_path} ||= [];
-    my $paths = $args->{template_args}->{include_path};
+    my $paths = $args->{include_path};
+    if (!$paths || ref $paths ne 'ARRAY') {
+        if (! defined $paths) {
+            $paths ||= [];
+        } else {
+            $paths = [ $paths ];
+        }
+        $args->{include_path} = $paths;
+    }
+
     if (scalar @$paths < 1) {
         push @$paths, $c->path_to('root');
     }
-    return $self->next::method($args);
-}
+    return $self->$next($args);
+};
 
 sub ACCEPT_CONTEXT {
     my ($self, $c) = @_;
@@ -72,8 +77,8 @@ sub ACCEPT_CONTEXT {
     return $self;
 }
 
-sub _build_suffix {
-    return '';
+sub _build_template_suffix {
+    return '.mt';
 }
 
 sub _build_stash_key {
@@ -88,8 +93,10 @@ sub _build_template_args {
 sub _build_template {
     my ($self) = @_;
 
-    return Text::MicroTemplate::File->new(
-        $self->template_args
+    return Text::MicroTemplate::Extended->new(
+        extension     => $self->template_suffix,
+        include_path  => $self->include_path,
+        template_args => $self->template_args,
     );
 }
 
@@ -119,8 +126,8 @@ sub get_template_file {
     # if that's empty, get the template the old way, $c->stash->{template}
     $template ||= $c->stash->{template};
     
-    # if those aren't set, try $c->action and the suffix
-    $template ||= $c->action . ($self->suffix);
+    # if those aren't set, try $c->action 
+    $template ||= $c->action;
     
     return $template;
 }
@@ -135,19 +142,34 @@ Catalyst::View::MicroTemplate - Text::MicroTemplate View For Catalyst
 
 =head1 SYNOPSIS
 
+    # MyApp::View::MicroTemplate
     package MyApp::View::MicroTemplate;
     use strict;
     use base qw(Catalyst::View::MicroTemplate);
 
+    # in your config
+    <View::MicroTemplate>
+        inlucde_path __path_to(root)__
+        include_path /path/to/include/path
+        template_suffix .mt # default
+        <template_args>
+            foo bar # $foo will be available in the template
+        </template_args>
+    </View::MicroTemplate>
+
+    # same thing in YAML
+    'View::MicroTemplate':
+        include_path:
+            - __path_to(root)__
+            - /path/to/include/path
+        template_args:
+            foo: bar
+        
 =head1 DESCRIPTION
 
-This is a Text::MicroTemplate view for Catalyst.
+This is a Text::MicroTemplate view for Catalyst. 
 
-=head1 CAVEATS
-
-Values passed to the stash are available to the template like Catalyst::View::TT, but they must be received by normal means. i.e.
-
-    <? my ($c, $args) = @_ ?>
-    # $args contains contents of stash
+Text::MicroTemplate is based on Mojo::Template, and it's aimed for speed and efficiency. In thismodule we use Text::MicroTemplate::Extended, as it allows a more
+realistic usage for applications.
 
 =cut
