@@ -104,11 +104,7 @@ sub _build_template {
 sub render {
     my ($self, $template, $args) = @_;
     my $mt = $self->template;
-    my $result = $mt->render_file($template, $self->context, $args);
-    if ($result->can('as_string')) {
-        return $result->as_string;
-    }
-    return $result;
+    return $mt->render_file($template, $self->context, $args);
 }
 
 sub process {
@@ -120,7 +116,11 @@ sub process {
 
     $c->res->content_type( sprintf("%s; charset=%s", $self->content_type, $self->charset ) );
     $self->template->template_args( $c->stash );
-    $c->res->body( $self->render( $template, $c->stash ) );
+    my $body = $self->render( $template, $c->stash );
+    if ($body->can('as_string')) {
+        $body = $bod->as_string;
+    }
+    $c->res->body( $body );
 }
 
 sub get_template_file {
