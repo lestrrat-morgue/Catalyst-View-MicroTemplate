@@ -104,7 +104,11 @@ sub _build_template {
 sub render {
     my ($self, $template, $args) = @_;
     my $mt = $self->template;
-    return $mt->render_file($template, $self->context, $args);
+    my $result = $mt->render_file($template, $self->context, $args);
+    if ($result->can('as_string')) {
+        return $result->as_string;
+    }
+    return $result;
 }
 
 sub process {
