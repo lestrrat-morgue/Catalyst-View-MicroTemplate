@@ -117,7 +117,7 @@ sub process {
     $c->res->content_type( sprintf("%s; charset=%s", $self->content_type, $self->charset ) );
     $self->template->template_args( $c->stash );
     my $body = $self->render( $template, $c->stash );
-    if ($body->can('as_string')) {
+    if (blessed $body && $body->can('as_string')) {
         $body = $bod->as_string;
     }
     $c->res->body( $body );
