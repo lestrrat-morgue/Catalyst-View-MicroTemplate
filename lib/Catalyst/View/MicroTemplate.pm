@@ -118,7 +118,7 @@ sub process {
     $self->template->template_args( $c->stash );
     my $body = $self->render( $template, $c->stash );
     if (blessed $body && $body->can('as_string')) {
-        $body = $bod->as_string;
+        $body = $body->as_string;
     }
     $c->res->body( $body );
 }
