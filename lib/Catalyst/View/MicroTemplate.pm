@@ -3,7 +3,7 @@ use Moose;
 use Text::MicroTemplate::Extended;
 use namespace::clean -except => qw(meta);
 
-our $VERSION = '0.00001';
+our $VERSION = '0.00002';
 
 extends 'Catalyst::View';
 
